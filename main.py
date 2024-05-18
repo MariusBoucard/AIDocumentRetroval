@@ -60,11 +60,7 @@ data = loader.load()
 from langchain.text_splitter import RecursiveCharacterTextSplitter, CharacterTextSplitter, MarkdownHeaderTextSplitter, HTMLHeaderTextSplitter
 
 from langchain_community.vectorstores import Chroma
-from langchain_community.document_loaders import PyMuPDFLoader
 
-loader = PyMuPDFLoader("./sd.pdf")
-data = loader.load()
-#pprint(data)
 pages = []
 data= data[3:len(data)]
 for docu in data:
@@ -142,19 +138,34 @@ qa_chain = RetrievalQA.from_chain_type(
 
 )
 
-# #result = qa_chain.invoke(question)
-# from langchain.chains.combine_documents import create_stuff_documents_chain
-# from langchain.chains import create_retrieval_chain
-# from langchain import hub
-
-# combine_docs_chain = create_stuff_documents_chain(
-#     llm, QA_CHAIN_PROMPT
-# )
-# retrieval_chain = create_retrieval_chain(retriever, combine_docs_chain)
-
-# retrieval_chain.invoke({"input":question,"question": question})
-
-while True:
-    question = input("Enter your question: ")
-    result = qa_chain.invoke({  "verbose": True,"query": question})
+# basic method deprecated but works 
+# while True:
+#     question = input("Enter your question: ")
+#     result = qa_chain.invoke({  "verbose": True,"query": question})
     #print(result)
+
+# method from doc
+
+from langchain.chains import create_retrieval_chain
+from langchain.chains.combine_documents import create_stuff_documents_chain
+from langchain_core.prompts import ChatPromptTemplate
+
+
+
+
+system_prompt = (
+    "Use the given context to answer the question. "
+    "If you don't know the answer, say you don't know. "
+    "Use three sentence maximum and keep the answer concise. "
+    "Context: {context}"
+)
+prompt = ChatPromptTemplate.from_messages(
+    [
+        ("system", system_prompt),
+        ("human", "{input}"),
+    ]
+)
+question_answer_chain = create_stuff_documents_chain(llm, prompt)
+chain = create_retrieval_chain(vectorstoreChroma.as_retriever(search_type="mmr"), question_answer_chain)
+
+chain.invoke({"input": question, "verbose": True})
