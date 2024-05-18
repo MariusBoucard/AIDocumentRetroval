@@ -137,24 +137,24 @@ import langchain
 
 qa_chain = RetrievalQA.from_chain_type(
     llm,
-    retriever=retriever,
+     retriever=vectorstoreChroma.as_retriever(search_type="mmr"),
     chain_type_kwargs={"prompt": QA_CHAIN_PROMPT},
 
 )
 
-#result = qa_chain.invoke(question)
-from langchain.chains.combine_documents import create_stuff_documents_chain
-from langchain.chains import create_retrieval_chain
-from langchain import hub
+# #result = qa_chain.invoke(question)
+# from langchain.chains.combine_documents import create_stuff_documents_chain
+# from langchain.chains import create_retrieval_chain
+# from langchain import hub
 
-combine_docs_chain = create_stuff_documents_chain(
-    llm, QA_CHAIN_PROMPT
-)
-retrieval_chain = create_retrieval_chain(retriever, combine_docs_chain)
+# combine_docs_chain = create_stuff_documents_chain(
+#     llm, QA_CHAIN_PROMPT
+# )
+# retrieval_chain = create_retrieval_chain(retriever, combine_docs_chain)
 
-retrieval_chain.invoke({"input":question,"question": question})
+# retrieval_chain.invoke({"input":question,"question": question})
 
-# while True:
-#     question = input("Enter your question: ")
-#     result = qa_chain({  "verbose": True,"query": question})
-#     #print(result)
+while True:
+    question = input("Enter your question: ")
+    result = qa_chain.invoke({  "verbose": True,"query": question})
+    #print(result)
