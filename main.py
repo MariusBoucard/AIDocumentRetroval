@@ -54,7 +54,7 @@ sentence_embedding[0:10]
 
 from langchain_community.document_loaders import PyMuPDFLoader
 
-loader = PyMuPDFLoader("./sd.pdf")
+loader = PyMuPDFLoader("./documents/metatune.pdf")
 data = loader.load()
 
 from langchain.text_splitter import RecursiveCharacterTextSplitter, CharacterTextSplitter, MarkdownHeaderTextSplitter, HTMLHeaderTextSplitter
