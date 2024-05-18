@@ -1,99 +1,30 @@
 from langchain.callbacks.manager import CallbackManager
 from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
-#from langchain.llms import Ollama
 from langchain_community.chat_models import ChatOllama
-# from langchain_community import invoke
 from pprint import pprint
-# langchain.debug = True # uncomment if you want to see what's going on under the hood
+from vectorial_db import load_db
+from vectorial_db import create_db
+from langchain_community.embeddings import OllamaEmbeddings
+
+
 MODEL = 'orca-mini'
+
 llm = ChatOllama(
     model=MODEL,
-       # verbose=True,
       callback_manager=CallbackManager([StreamingStdOutCallbackHandler()]),
-    temperature=0 # creativity of the model from 0 to 1 (more creative)
-)
+    temperature=0 )
 
-#message = llm.invoke( "What carrer Obama would have really wanted to do?")
-#can already talk to the model like this
-
-#print(message)
-
-from langchain.chains import ConversationChain
-from langchain.memory import ConversationBufferMemory, ConversationBufferWindowMemory
-from langchain.prompts import PromptTemplate
-
-template="""
-[INST] <<SYS>> The following is a friendly conversation between a human and an AI. The AI is talkative and provides lots of specific details from its context. If the AI does not know the answer to a question, it truthfully says it does not know. \n\nCurrent conversation:\n {history}
- <</SYS>>
-
-\nHuman: {input}\nAI: [/INST]
-"""
-
-memory = ConversationBufferMemory() # ConversationBufferWindowMemory(k=1) # you can choose how long the history is kept
-conversation = ConversationChain(
-    llm=llm,
-    memory = memory,
-#    verbose=True,
-    prompt=PromptTemplate(input_variables=['history', 'input'], template=template)
-)
-m = conversation.predict(input="Hi, my name is Camille")
-
-
+oembed = OllamaEmbeddings(model=MODEL)
+create_db(oembed, "./metaDB_2.db")
 ## Possibilité de faire un summary, voir apres
-from pprint import pprint # pretty print for printing lists
-from langchain_community.embeddings import OllamaEmbeddings
 # On peut utiliser des modeles de Ollama ou ceux de hugging face
 
 
 ##
 # On embed la phrase de question
 #
-oembed = OllamaEmbeddings(model=MODEL)
-sentence_embedding=oembed.embed_query("Llamas are social animals and live with others as a herd.")
-sentence_embedding[0:10]
 
-from langchain_community.document_loaders import PyMuPDFLoader
-
-loader = PyMuPDFLoader("./documents/metatune.pdf")
-data = loader.load()
-
-from langchain.text_splitter import RecursiveCharacterTextSplitter, CharacterTextSplitter, MarkdownHeaderTextSplitter, HTMLHeaderTextSplitter
-
-from langchain_community.vectorstores import Chroma
-
-pages = []
-data= data[3:len(data)]
-for docu in data:
-    newtext = docu.page_content
-    if newtext != '':
-        pages.append(newtext)
-
-# Join all the pages into a single string
-huge_text = ' '.join(pages)
-
-# Now huge_text contains all the page_content joined together
-#print(huge_text)
-text_splitter = RecursiveCharacterTextSplitter(
-    chunk_size=400,
-    chunk_overlap=70,
-    separators=["\n22","\n\n", "\n", " ", ""] # splits first with '\n\n' separator then split with '\n', ... until the chunk has the right size
-)
-
-all_splits = text_splitter.split_documents(data)
-
-#Display what will be stored in the database
-#splitted document, could be better currated
-#pprint(all_splits)
-
-#Create the vectorial database
-import pickle
-import os
-file_path = "./chroma.db"
-if not os.path.exists(file_path):
-    vectorstoreChroma = Chroma.from_documents(documents=all_splits, embedding=oembed,persist_directory=file_path)
-# load from disk
-else :
-    vectorstoreChroma = Chroma(persist_directory=file_path, embedding_function=oembed)
+vectorstoreChroma = load_db(oembed, "./metaDB_2.db")
 
 
 question = "how could I do a really modern auto tune effect ?"
@@ -102,41 +33,17 @@ question = "how could I do a really modern auto tune effect ?"
 # ask the databae for document
 docs = vectorstoreChroma.similarity_search_with_score(question)
 print("Number of documents returned : ",len(docs))
-pprint(docs)
-
+for doc in docs:
+   # print(doc[0].page_content)
+    pass
 retriever = vectorstoreChroma.as_retriever(search_type="mmr")
 docs = retriever.invoke(question)
-pprint(docs)
+#pprint(docs)
 
 
 
 # Rag asking with the database
 
-from langchain.prompts import PromptTemplate
-
-
-# Build prompt
-QA_TEMPLATE = """
-[INST] <<SYS>> Use the following pieces of context to answer the question at the end. If you don't know the answer, just say that you don't know, don't try to make up an answer. Use three sentences maximum. Keep the answer as concise as possible. Always say "thanks for being my wonderful bro, I love you" at the end of the answer
-{context} <</SYS>>
-
-Question: {question}
-Helpful Answer: [/INST]
-"""
-
-QA_CHAIN_PROMPT = PromptTemplate.from_template(QA_TEMPLATE)
-QA_CHAIN_PROMPT
-# QA chain
-from langchain.chains import RetrievalQA
-import langchain
-# langchain.debug = True
-
-qa_chain = RetrievalQA.from_chain_type(
-    llm,
-     retriever=vectorstoreChroma.as_retriever(search_type="mmr"),
-    chain_type_kwargs={"prompt": QA_CHAIN_PROMPT},
-
-)
 
 # basic method deprecated but works 
 # while True:
@@ -146,26 +53,66 @@ qa_chain = RetrievalQA.from_chain_type(
 
 # method from doc
 
-from langchain.chains import create_retrieval_chain
-from langchain.chains.combine_documents import create_stuff_documents_chain
+
+retriever = vectorstoreChroma.as_retriever(
+    search_type="mmr",
+    
+)
+
 from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.runnables import RunnablePassthrough
+#Question formating
 
 
+message = """
+You are a really helpful Agent called Fabrice Gabriel. You are a software developper and you are helping a friend who is a beginner music producer.
+As you developped an autotune software, you could access to it's documentation and know how to use it to answer users need.
+Answer this question using the provided documentation, that should contains ann the informations needed by the user.
+You should answer with the informations gathered in the context only.
 
+your messages should always finish by saying user is beautiful.
 
-system_prompt = (
-    "Use the given context to answer the question. "
-    "If you don't know the answer, say you don't know. "
-    "Use three sentence maximum and keep the answer concise. "
-    "Context: {context}"
-)
-prompt = ChatPromptTemplate.from_messages(
-    [
-        ("system", system_prompt),
-        ("human", "{input}"),
-    ]
-)
-question_answer_chain = create_stuff_documents_chain(llm, prompt)
-chain = create_retrieval_chain(vectorstoreChroma.as_retriever(search_type="mmr"), question_answer_chain)
+User question :
+{question}
 
-chain.invoke({"input": question, "verbose": True})
+Context:
+{context}
+"""
+
+def process_context(context):
+    # Extract the text from the context
+    text = context[0].page_content
+
+    # Return the text in a format suitable for the prompt
+    return text
+
+def printer(context):
+    print("PRINTERRRR")
+    print(context)
+    return context
+
+def extract_text(context):
+    print("EXTRACTOR")
+    text = " ".join([doc.page_content for doc in context])
+    print(text)
+
+    # Return the text
+    return text
+
+    return context
+
+prompt = ChatPromptTemplate.from_messages([("human", message)])
+
+# rag_chain = {"context": retriever, "question": RunnablePassthrough()} |extract_text| prompt | printer | llm
+#THe goal should be to have a chain that will make the question to ask and then do the research with sim
+context = retriever.invoke(question)
+
+text = " ".join([doc.page_content for doc in context])
+
+formatted = message.format(question=question, context=text)
+print(formatted)
+llm.invoke(formatted)
+# response = rag_chain.invoke("tell me how to create a really strong autotune effect")
+
+# print(response.content)
+
