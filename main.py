@@ -111,8 +111,6 @@ text = " ".join([doc.page_content for doc in context])
 
 formatted = message.format(question=question, context=text)
 print(formatted)
-llm.invoke(formatted)
-# response = rag_chain.invoke("tell me how to create a really strong autotune effect")
+llm.invoke(formatted,stop=["stop","\n\n"])
 
-# print(response.content)
 

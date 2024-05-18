@@ -1,0 +1,6 @@
+Metatune is an incredible music software.
+It's a cutting edge auto tune that allow user to set different parameter to define the sound they want.
+The speed parameter is a parameter that will allow to tell the time it will take for the algorithm to tune the sound. If the speed
+is low (near of 0 ms or even negative), it will create a really strong tuning effect as we can hear in modern record.
+THere is a functionality that will allow to double the voice to create some kind of backing vocals. To do so, you can just ajust the doubler wet from 
+the middle view
