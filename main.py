@@ -59,7 +59,7 @@ data = loader.load()
 
 from langchain.text_splitter import RecursiveCharacterTextSplitter, CharacterTextSplitter, MarkdownHeaderTextSplitter, HTMLHeaderTextSplitter
 
-from langchain.vectorstores import Chroma
+from langchain_community.vectorstores import Chroma
 from langchain_community.document_loaders import PyMuPDFLoader
 
 loader = PyMuPDFLoader("./sd.pdf")
@@ -86,25 +86,19 @@ text_splitter = RecursiveCharacterTextSplitter(
 all_splits = text_splitter.split_documents(data)
 
 #Display what will be stored in the database
-pprint(all_splits)
+#splitted document, could be better currated
+#pprint(all_splits)
 
 #Create the vectorial database
 import pickle
 import os
+file_path = "./chroma.db"
+if not os.path.exists(file_path):
+    vectorstoreChroma = Chroma.from_documents(documents=all_splits, embedding=oembed,persist_directory=file_path)
+# load from disk
+else :
+    vectorstoreChroma = Chroma(persist_directory=file_path, embedding_function=oembed)
 
-# Path to the file where the object will be stored
-file_path = 'vectorstoreChroma.pkl'
-
-if os.path.exists(file_path):
-    # If the file exists, load the object from the file
-    with open(file_path, 'rb') as f:
-        vectorstoreChroma = pickle.load(f)
-else:
-    # If the file doesn't exist, create the object and save it to the file
-    vectorstoreChroma = Chroma.from_documents(documents=all_splits, embedding=oembed)
-    with open(file_path, 'wb') as f:
-        pass
-       # pickle.dump(vectorstoreChroma, f)
 
 question = "how could I do a really modern auto tune effect ?"
 
@@ -115,7 +109,7 @@ print("Number of documents returned : ",len(docs))
 pprint(docs)
 
 retriever = vectorstoreChroma.as_retriever(search_type="mmr")
-docs = retriever.get_relevant_documents(question)
+docs = retriever.invoke(question)
 pprint(docs)
 
 
@@ -148,10 +142,19 @@ qa_chain = RetrievalQA.from_chain_type(
 
 )
 
-result = qa_chain({"query": question})
+#result = qa_chain.invoke(question)
+from langchain.chains.combine_documents import create_stuff_documents_chain
+from langchain.chains import create_retrieval_chain
+from langchain import hub
 
+combine_docs_chain = create_stuff_documents_chain(
+    llm, QA_CHAIN_PROMPT
+)
+retrieval_chain = create_retrieval_chain(retriever, combine_docs_chain)
 
-while True:
-    question = input("Enter your question: ")
-    result = qa_chain({  "verbose": True,"query": question})
-    #print(result)
+retrieval_chain.invoke({"input":question,"question": question})
+
+# while True:
+#     question = input("Enter your question: ")
+#     result = qa_chain({  "verbose": True,"query": question})
+#     #print(result)
