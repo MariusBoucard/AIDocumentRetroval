@@ -29,9 +29,9 @@ class databaseService:
         # Now huge_text contains all the page_content joined together
         #print(huge_text)
         text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=400,
-            chunk_overlap=70,
-            separators=["\n22","\n\n", "\n", " ", ""] # splits first with '\n\n' separator then split with '\n', ... until the chunk has the right size
+            chunk_size=1000,
+            chunk_overlap=150,
+            separators=["\n22","\n\n","\n"] # splits first with '\n\n' separator then split with '\n', ... until the chunk has the right size
         )
 
         all_splits = text_splitter.split_documents(data)

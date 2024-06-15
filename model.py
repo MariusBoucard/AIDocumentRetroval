@@ -77,10 +77,10 @@ class Model:
             #     n_threads=8,            # The number of CPU threads to use, tailor to your system and the resulting performance
             #     n_gpu_layers=35         # The number of layers to offload to GPU, if you have GPU acceleration available
             #     )
-            self.llm =  AutoModelForCausalLM.from_pretrained("./mistral-7b-instruct-v0.2.Q4_K_M.gguf")
+           # self.llm =  AutoModelForCausalLM.from_pretrained("./mistral-7b-instruct-v0.2.Q4_K_M.gguf")
 
             self.llm = Llama(
-            model_path="./mistral-7b-instruct-v0.2.Q6_K.gguf",  # Download the model file first
+            model_path="./mistral-7b-instruct-v0.2.Q4_K_M.gguf",  # Download the model file first
             n_ctx=32768,  # The max sequence length to use - note that longer sequence lengths require much more resources
             n_threads=8,            # The number of CPU threads to use, tailor to your system and the resulting performance
             n_gpu_layers=35,         # The number of layers to offload to GPU, if you have GPU acceleration available
@@ -111,7 +111,6 @@ class Model:
             #    verbose=True,
                 prompt=PromptTemplate(input_variables=['history', 'input'], template=self.template)
             )
-        
 
     def dictToPrompt(self, conversationDict):
         prompt = ""
@@ -132,48 +131,33 @@ class Model:
             "Don't forget to say 'thanks for being my wonderful bro, I love you' at the end of the answer."
             "The data you could use to help him in his question is the following:"
             " {context}"
+            "Here's the beginning of your conversation :"
+            "{assistantMessage}"
         )
 
-
-
-        chat = [
-            {"role": "system", "content":prompt},
-            {"role": "user", "content": "Hey, can you tell me any fun things to do in New York?"}
-        ]
-        systemPrompt = (
-            "Use the given context to answer the question. "
-            "If you don't know the answer, say you don't know. "
-            "The context will give you some informations about the inf-bass plugin. "
-            "theses informations corresponds to the question the user asked."
-            "Don't forget to say 'thanks for being my wonderful bro, I love you' at the end of the answer."
-            "Don't forget to tell how much you love Philippe poutou every time you can."
-            "Context: {context}"
-        )
-        print(conversationDict)
-        print(llm.create_chat_completion(chat, max_tokens=512, stop=["</s>"])["choices"][0]["text"])
-        discussion = self.dictToPrompt(conversationDict)
-
-        #rechercher avec le dernier element de user pour avoir le context
+        #Document retrieval
         print("\n\n Ready to run the search documents\n\n")
         #Generation of the context
         retrieved = self.searcher.embedAndSearch(conversationDict[-1]["content"])
-
         context = ""
         for doc in retrieved:
             context += doc[0].page_content + "\n"
-        print(context)
-        self.prompt = systemPrompt2.format(context=context,discussion=discussion)
-        systemPrompt2 = self.prompt
-        print("model running")
-
-        output = self.llm(prompt=self.prompt,  stream=True ,   max_new_tokens=100,  stop=["[USER]"])
-        print(output)
+        self.prompt = prompt.format(context=context,assistantMessage=conversationDict[0]["content"])
+       # conversationDict.insert(0,{"role": "system", "content":self.prompt})
+        conversationDict[0]["content"] = self.prompt
+        print(conversationDict)
+        print("\n\nGetting the output\n\n")
+        output = self.llm.create_chat_completion(conversationDict,max_tokens=512, stop=["</s>"])
+        #discussion = self.dictToPrompt(conversationDict)
+        print("output generated")
+        #rechercher avec le dernier element de user pour avoir le context
+        print("\n\n")
+        return output
         output_list = list(output)  # Store the output in a list
+        print(output_list)
         output_list = [s.replace('[ASSISTANT]', '').replace('[\\ASSISTANT]', '').replace('[ASSISTANT', '') for s in output_list]
         output_stream = (output for output in output_list)
         self.lastResponse = ''.join(output_list)
-
-
         return output_stream
 
     def askQuestion_oneShot(self,input):
