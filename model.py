@@ -79,6 +79,17 @@ class Model:
             #     )
             self.llm =  AutoModelForCausalLM.from_pretrained("./mistral-7b-instruct-v0.2.Q4_K_M.gguf")
 
+            self.llm = Llama(
+            model_path="./mistral-7b-instruct-v0.2.Q6_K.gguf",  # Download the model file first
+            n_ctx=32768,  # The max sequence length to use - note that longer sequence lengths require much more resources
+            n_threads=8,            # The number of CPU threads to use, tailor to your system and the resulting performance
+            n_gpu_layers=35,         # The number of layers to offload to GPU, if you have GPU acceleration available
+            chat_format="llama-2"
+                )
+    # Can have a chat version as well !
+    # Simple inference example
+            
+
 
             self.searcher = Searcher()
             self.searcher.createDatabase("./documents/inf-basse.pdf","./flicflac.db")
@@ -110,16 +121,7 @@ class Model:
 
 
     def askQuestion_withContext(self, conversationDict):
-        systemPrompt = (
-            "Use the given context to answer the question. "
-            "If you don't know the answer, say you don't know. "
-            "The context will give you some informations about the inf-bass plugin. "
-            "theses informations corresponds to the question the user asked."
-            "Don't forget to say 'thanks for being my wonderful bro, I love you' at the end of the answer."
-            "Don't forget to tell how much you love Philippe poutou every time you can."
-            "Context: {context}"
-        )
-        systemPrompt2 = (
+        prompt = (
             "You are an assistant for a music production company called Slate Digital. "
             "This compagny is well knows for its Audio plugins, pioneers in hardware reproduction."
             "You are helping a user with a question about all the plugins of the compagny. "
@@ -130,9 +132,25 @@ class Model:
             "Don't forget to say 'thanks for being my wonderful bro, I love you' at the end of the answer."
             "The data you could use to help him in his question is the following:"
             " {context}"
-            "Now here is the rest of the conversation you already had with the user:"
-            "{discussion}"
         )
+
+
+
+        chat = [
+            {"role": "system", "content":prompt},
+            {"role": "user", "content": "Hey, can you tell me any fun things to do in New York?"}
+        ]
+        systemPrompt = (
+            "Use the given context to answer the question. "
+            "If you don't know the answer, say you don't know. "
+            "The context will give you some informations about the inf-bass plugin. "
+            "theses informations corresponds to the question the user asked."
+            "Don't forget to say 'thanks for being my wonderful bro, I love you' at the end of the answer."
+            "Don't forget to tell how much you love Philippe poutou every time you can."
+            "Context: {context}"
+        )
+        print(conversationDict)
+        print(llm.create_chat_completion(chat, max_tokens=512, stop=["</s>"])["choices"][0]["text"])
         discussion = self.dictToPrompt(conversationDict)
 
         #rechercher avec le dernier element de user pour avoir le context
