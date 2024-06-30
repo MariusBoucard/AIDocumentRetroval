@@ -109,11 +109,11 @@ class databaseService:
 
         JSONList = []
         dataBasePath = 'documents/database.json'
-        if os.path.exists():
+        if os.path.exists(dataBasePath):
             with open(dataBasePath) as f:
              JSONList = json.loads(f.read())
         for a in range(len(JSONList),len(JSONList)+len(documents)):
-            JSONList.append({"id": a,"text":documents[a]})
+            JSONList.append({"id": a,"text":documents[a-len(JSONList)]})
         self.documents = JSONList
         with open(dataBasePath, 'w') as f:
             json.dump(JSONList, f)
@@ -156,12 +156,13 @@ class databaseService:
         query_embedding = np.array(query_embedding)
         distances,indices = self.index.search(query_embedding,2 )
         response = ""
+        print(indices)
         for doc in self.documents:
             if doc["id"] == indices[0][0]:
                 response = doc["text"]
                 break
 
-       # print(response)
+        print(response)
         return response
         # if self is not None:
             
@@ -177,8 +178,8 @@ class databaseService:
         k = 5
 if __name__ == "__main__":
     db = databaseService()
-    db.createBaseFromDocument("./documents/inf-basse.pdf")
-   # db.addFromTextDocument("cpp.txt")
+  #  db.createBaseFromDocument("./documents/inf-basse.pdf")
+    db.addFromTextDocument("manualDocuments.txt")
     # db.loadDatabase("./flicflac2.db.faiss")
     # search = db.search(" Inf Bass plugin ?")
     # # print("done")

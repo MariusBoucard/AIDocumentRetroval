@@ -29,10 +29,10 @@ for msg in st.session_state.messages:
 if prompt := st.chat_input():
     st.session_state.messages.append({"role": "user", "content": prompt})
     st.chat_message("user").write(prompt)
-    query = model.reformulate_query(prompt)
+   # query = model.reformulate_query(prompt)
     responses = client.chat.completions.create(
                 model="model-identifier",
-                messages=model.askQuestion_withContext(list(st.session_state.messages),query),
+                messages=model.askQuestion_withContext(list(st.session_state.messages),prompt),
                 temperature=0.7,
                 stream=True)
     
