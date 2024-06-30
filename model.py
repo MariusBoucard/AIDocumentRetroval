@@ -29,7 +29,7 @@ class Model:
         response = random.choice(
             [
                 "Hello bro i m Steven Slate from Slate Digital, thanks to my huge knowledge in music production and my AI, I can help you with your music production questions.",
-                "I'm Fabrie Gabriel, The best producer of indie music in the world, I can help you with your music production questions."
+                "I'm Fabrice Gabriel, The best producer of indie music in the world, I can help you with your music production questions."
             ]
         )
         # for word in response.split():
@@ -43,7 +43,7 @@ class Model:
 
 
             self.searcher = Searcher()
-            self.searcher.createDatabase("./documents/inf-basse.pdf","./flicflac.db.faiss")
+            #self.searcher.createDatabase("./documents/inf-basse.pdf","./flicflac.db.faiss")
             self.searcher.loadDatabase("./flicflac.db.faiss")
             self.prompt = ""
 
@@ -70,16 +70,19 @@ class Model:
         return prompt
 
 
-    def askQuestion_withContext(self, conversationDict):
+    def askQuestion_withContext(self, conversationDict,query):
         prompt = (
             "You are an assistant for a music production company called Slate Digital. "
             "This compagny is well knows for its Audio plugins, pioneers in hardware reproduction."
             "You are helping a user with a question about all the plugins of the compagny. "
             "When the user ask you a question, some data will be provided to you to help you answer the question. "
             "The compagny produces a lot of plugins, you should know them all. "
-            "One of the most famous is Inf bass, this beast includes for differents kinds of low ends saturators that creates a deep and powerfull bass sound."
-            "The user will only ask questions about this software. "
-            "Don't forget to say 'thanks for being my wonderful bro, I love you' at the end of the answer."
+            "One of the most famous is Inf bass, this beast includes for differents kinds of low ends shapers that creates a deep and powerfull bass sound."
+            "Other software of the compagny are Infinity EQ, which is a Dynamic parametric equalizer,"
+            "and Virtual Mix Rack, known as well as VMR. This plugin rack comes with a lot of different compressors, based on "
+            "hardware replication, and some reproduced EQ as well."
+            "Don't forget to say 'thanks for being my wonderful bro, I love you' at the end of the answer"
+            "If the question is not related to music production you should say to the user he makes you waste your time"
             "The data you could use to help him in his question is the following:"
             " {context}"
             "Here's the beginning of your conversation :"
@@ -92,7 +95,7 @@ class Model:
         
         # could reformulate the question for document retrieval
 
-        context = self.searcher.embedAndSearch(conversationDict[-1]["content"])
+        context = self.searcher.embedAndSearch(query)
         
         # for doc in retrieved:
         #     context += doc[0].page_content + "\n"
@@ -129,14 +132,37 @@ class Model:
         output_stream = (output for output in output_list)
         self.lastResponse = ''.join(output_list)
         return output_stream
+    
+    def reformulate_query(self, query):
+        prompt= """You will be given a quesiton by the user. 
+        This question will be in natural language
+        Your job will be to understand the question and write down
+        a query that will be used to search into a database of documents.
+        This database uses similarity search to find the most relevant documents
+        Your answer should only contains the query that will be used to search data in the database
+        This answer should be short and related to audio plugin usage. You can search about way to use the plugins,
+        different functionalities it offers, and differents ways to mix an instrument or a song.
+        """
 
+        message = [{"role": "system", "content": prompt},
+              {"role": "user", "content": query}]
+        response = self.client.chat.completions.create(
+                model="model-identifier",
+                messages=message,
+                temperature=2,
+            )
+        print(response)
+        response = response.choices[0].message.content
+        print(response)
+        return response
+         
     def askQuestion_oneShot(self,input):
             #To be redo better
             docs = self.searcher.embedAndSearch(input)
             #chaque document est un tuple doc/similarité
             docs = [doc[0] for doc in docs]
 
-            system_prompt = (
+            system_prompt = print(
             "Use the given context to answer the question. "
             "If you don't know the answer, say you don't know. "
             "The context will give you some informations about the inf-bass plugin. "

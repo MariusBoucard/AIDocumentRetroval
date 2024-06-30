@@ -15,8 +15,8 @@ class Searcher:
 
     def loadDatabase(self, path):
         self.dataBase = self.dataBaseService.loadDatabase(path)
-    def createDatabase(self, path, baseName):
-        self.dataBase = self.dataBaseService.createBaseFromDocument(path,baseName)
+    def createDatabase(self,fileName, path, baseName):
+        self.dataBase = self.dataBaseService.createBaseFromDocument(path,fileName,baseName)
 
     def embedAndSearch(self, question):
         return self.dataBaseService.search(question)
