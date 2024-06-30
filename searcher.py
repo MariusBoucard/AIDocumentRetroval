@@ -13,8 +13,8 @@ class Searcher:
         self.embedder = OllamaEmbeddings(model=self.MODEL)
         self.dataBaseService = databaseService()
 
-    def loadDatabase(self, path):
-        self.dataBase = self.dataBaseService.loadDatabase(path)
+    def loadDatabase(self):
+        self.dataBase = self.dataBaseService.loadDatabase()
     def createDatabase(self,fileName, path, baseName):
         self.dataBase = self.dataBaseService.createBaseFromDocument(path,fileName,baseName)
 

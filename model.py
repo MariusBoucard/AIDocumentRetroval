@@ -44,7 +44,7 @@ class Model:
 
             self.searcher = Searcher()
             #self.searcher.createDatabase("./documents/inf-basse.pdf","./flicflac.db.faiss")
-            self.searcher.loadDatabase("./flicflac.db.faiss")
+            self.searcher.loadDatabase()
             self.prompt = ""
 
     def create_conversation(self):

@@ -76,7 +76,7 @@ class databaseService:
             allEmbeddings.append(embed)
         
         JSONList = []
-        dataBasePath = 'documents/dataBase.json'
+        dataBasePath = 'documents/database.json'
         if os.path.exists(dataBasePath):
             with open(dataBasePath) as f:
              JSONList = json.loads(f.read())
@@ -108,7 +108,7 @@ class databaseService:
             allEmbeddings.append(embed)
 
         JSONList = []
-        dataBasePath = 'documents/dataBase.json'
+        dataBasePath = 'documents/database.json'
         if os.path.exists():
             with open(dataBasePath) as f:
              JSONList = json.loads(f.read())
@@ -178,7 +178,7 @@ class databaseService:
 if __name__ == "__main__":
     db = databaseService()
     db.createBaseFromDocument("./documents/inf-basse.pdf")
-    db.addFromTextDocument("cpp.txt")
+   # db.addFromTextDocument("cpp.txt")
     # db.loadDatabase("./flicflac2.db.faiss")
     # search = db.search(" Inf Bass plugin ?")
     # # print("done")
