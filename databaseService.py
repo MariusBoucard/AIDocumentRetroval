@@ -128,7 +128,8 @@ class databaseService:
     def createDatabaseFromJSON(self):
         JSONList = []
         if os.path.exists('documents/database.json'):
-            JSONList = json.loads(f.read())
+            with open('documents/database.json') as f:
+                JSONList = json.loads(f.read())
         else :
             print("No JSON file found")
             return
@@ -154,7 +155,7 @@ class databaseService:
     def search(self,query):
         query_embedding = [self.get_embedding(query)]
         query_embedding = np.array(query_embedding)
-        distances,indices = self.index.search(query_embedding,2 )
+        distances,indices = self.index.search(query_embedding,1 )
         response = ""
         print(indices)
         for doc in self.documents:
@@ -178,8 +179,9 @@ class databaseService:
         k = 5
 if __name__ == "__main__":
     db = databaseService()
+    db.createDatabaseFromJSON()
   #  db.createBaseFromDocument("./documents/inf-basse.pdf")
-    db.addFromTextDocument("manualDocuments.txt")
+ #   db.addFromTextDocument("manualDocuments.txt")
     # db.loadDatabase("./flicflac2.db.faiss")
     # search = db.search(" Inf Bass plugin ?")
     # # print("done")

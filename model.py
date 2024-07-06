@@ -81,6 +81,7 @@ class Model:
             "Other software of the compagny are Infinity EQ, which is a Dynamic parametric equalizer,"
             "and Virtual Mix Rack, known as well as VMR. This plugin rack comes with a lot of different compressors, based on "
             "hardware replication, and some reproduced EQ as well."
+            "You know the different people of the compagny as well and are able to answer questions about them. "            
             "Don't forget to say 'thanks for being my wonderful bro, I love you' at the end of the answer"
             "If the question is not related to music production you should say to the user he makes you waste your time"
             "The data you could use to help him in his question is the following:"
@@ -106,32 +107,7 @@ class Model:
         print(conversation)
         print("\n\nGetting the output\n\n")
         return conversation
-        completion = self.client.chat.completions.create(
-                model="model-identifier",
-                messages=conversation,
-                temperature=0.7,
-                stream=True,
-            )
 
-        new_message = {"role": "assistant", "content": ""}
-        
-        for chunk in completion:
-            if chunk.choices[0].delta.content:
-                print(chunk.choices[0].delta.content, end="", flush=True)
-                new_message["content"] += chunk.choices[0].delta.content
-        #output = self.llm.create_chat_completion(conversation,max_tokens=512, stop=["</s>"])["choices"][0]["message"]["content"]
-        #discussion = self.dictToPrompt(conversationDict)
-        print("output generated")
-        self.lastResponse = new_message["content"]
-        #rechercher avec le dernier element de user pour avoir le context
-        print("\n\n")
-        return completion
-        output_list = list(output)  # Store the output in a list
-        print(output_list)
-        output_list = [s.replace('[ASSISTANT]', '').replace('[\\ASSISTANT]', '').replace('[ASSISTANT', '') for s in output_list]
-        output_stream = (output for output in output_list)
-        self.lastResponse = ''.join(output_list)
-        return output_stream
     
     def reformulate_query(self, query):
         prompt= """You will be given a quesiton by the user. 
