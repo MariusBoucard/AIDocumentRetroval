@@ -51,15 +51,21 @@ with st.chat_message("assistant"):
         response = model.lastResponse
         print(first)
     else:
-       response = st.write(model.askQuestion_withContext(st.session_state.messages))
-       response = model.lastResponse
-
+        response_container = st.empty()
+        full_response = ""
+        for response_chunk in model.askQuestion_withContext(st.session_state.messages):
+            if response_chunk:
+                full_response += response_chunk
+                response_container.markdown(full_response)
+            else:
+                st.error("Failed to get a response from the model.")
+        st.session_state.messages.append({"role": "assistant", "content": full_response})
     #Brancher le model ici
     #Creation de la bonne input à lui envoyer a partir du s
 # Add assistant response to chat history
-    st.session_state.messages.append({"role": "assistant", "content": response})
+    #st.session_state.messages.append({"role": "assistant", "content": response})
     #model.askQuestion_withContext(st.session_state.messages)
 
-st.session_state.messages
+#st.session_state.messages
 
 
