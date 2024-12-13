@@ -13,12 +13,7 @@ from model import Model
 model = Model()
 model.create_model()
 
-
-
-first = ""
-
-
-st.title("Slate Digital Bot")
+st.title("Big fat Bot")
 
 # Initialize chat history
 if "messages" not in st.session_state:
@@ -49,7 +44,7 @@ with st.chat_message("assistant"):
         st.write(response)  # Display the response
        # response= st.write(response_generator())
         response = model.lastResponse
-        print(first)
+        st.session_state.messages.append({"role": "assistant", "content": response})
     else:
         response_container = st.empty()
         full_response = ""
@@ -60,6 +55,8 @@ with st.chat_message("assistant"):
             else:
                 st.error("Failed to get a response from the model.")
         st.session_state.messages.append({"role": "assistant", "content": full_response})
+
+
     #Brancher le model ici
     #Creation de la bonne input à lui envoyer a partir du s
 # Add assistant response to chat history

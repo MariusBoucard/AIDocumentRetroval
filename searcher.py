@@ -1,5 +1,5 @@
-from langchain_community.embeddings import OllamaEmbeddings
-from langchain_community.vectorstores import Chroma
+from langchain_ollama import OllamaEmbeddings
+from langchain_chroma import Chroma
 from langchain.chains import create_retrieval_chain
 
 from langchain.prompts import PromptTemplate
@@ -23,7 +23,7 @@ class Searcher:
         docs = self.dataBase.similarity_search_with_score(sentence_embedding)
         print("Number of documents returned : ",len(docs))
         print(docs[0])
-        # retriever = self.dataBase.as_retriever(search_type="mmr")
+        retriever = self.dataBase.as_retriever(search_type="mmr")
         
         # print("Number of documents returned : ",len(retriever))
         # print(retriever[0])
