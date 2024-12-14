@@ -1,7 +1,4 @@
-from langchain_ollama import OllamaEmbeddings
-from langchain_chroma import Chroma
-from langchain.chains import create_retrieval_chain
-
+import requests
 from langchain.prompts import PromptTemplate
 from langchain.chains import RetrievalQA
 from databaseService import databaseService
@@ -9,8 +6,11 @@ from databaseService import databaseService
 class Searcher:
     def __init__(self):
         self.dataBase = None
-        self.MODEL = 'orca-mini'
-        self.embedder = OllamaEmbeddings(model=self.MODEL)
+        self.embedding_api_url = "http://127.0.0.1:1234/v1/embeddings"
+        self.headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer YOUR_API_KEY"  # Replace with your actual API key if needed
+        }
         self.dataBaseService = databaseService()
 
     def loadDatabase(self, path):
@@ -18,17 +18,9 @@ class Searcher:
     def createDatabase(self, path, baseName):
         self.dataBase = self.dataBaseService.createBaseFromDocument(path,baseName)
 
-    def embedAndSearch(self, question):
-        sentence_embedding=self.embedder.embed_query(question)
-        docs = self.dataBase.similarity_search_with_score(sentence_embedding)
-        print("Number of documents returned : ",len(docs))
-        print(docs[0])
-        retriever = self.dataBase.as_retriever(search_type="mmr")
-        
-        # print("Number of documents returned : ",len(retriever))
-        # print(retriever[0])
-        self.documentsRetrieved = docs
-        return docs
+    def embedAndSearch(self, question :str):
+        Documents = self.dataBaseService.embedAndSearch(question)
+        return Documents
     
     def rietriveFromQA(self, question,llm):
             # Build prompt
@@ -43,10 +35,6 @@ class Searcher:
         QA_CHAIN_PROMPT = PromptTemplate.from_template(QA_TEMPLATE)
         # QA chain
         print("Not made yet")
-
-        
-
-        # langchain.debug = True
 
         qa_chain = RetrievalQA.from_chain_type(
             llm,

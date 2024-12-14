@@ -41,8 +41,8 @@ class Model:
 
         #     print("Failed to get a response from the model:", response.status_code, response.text)
         self.searcher = Searcher()
-        self.searcher.createDatabase("./documents/inf-basse.pdf","./flicflac.db")
-        self.searcher.loadDatabase("./flicflac.db")
+        self.searcher.createDatabase("./documents/inf-basse.pdf","./faiss.db")
+        self.searcher.loadDatabase("./faiss.db")
         self.prompt = ""
 
     def create_conversation(self):
@@ -87,14 +87,20 @@ class Model:
         #Document retrieval
         print("\n\n Ready to run the search documents\n\n")
         #Generation of the context
-        #retrieved = self.searcher.embedAndSearch(conversationDict[-1]["content"])
-        context = ""
-        # for doc in retrieved:
-        #     context += doc[0].page_content + "\n"
+        Documents = self.searcher.embedAndSearch(conversationDict[-1]["content"])
+        context = Documents
+        print(Documents)
+        print("docu gotten")
+        for doc in Documents:
+            print(f"Processing document: {doc}")
+            #NOt curated yet as we process letter by letter ? ?????
+           # context += doc[0] + "\n"
+        print("\n\nContext generated\n\n")
         self.prompt = prompt.format(context=context,assistantMessage=conversationDict[0]["content"])
         conversationDictCopy = copy.deepcopy(conversationDict)
+        
+        print("pute")
         conversationDictCopy.insert(0,{"role": "system", "content":self.prompt})
-        print(conversationDictCopy)
         self.payload["messages"] = conversationDictCopy
         print("\n\nGetting the output\n\n")
 
@@ -134,57 +140,6 @@ class Model:
             "Context: {context}"
             )
 
-            #Recup les docs et faire un bon systemprompt
-
-            # prompt = ChatPromptTemplate.from_messages(
-            #     [
-            #         ("system", system_prompt),
-            #         ("human", input),
-            #     ]
-            # )
-            # print(prompt)
-            # print("\n\n\n ")
-            # print(docs)
-
-            # chain = create_stuff_documents_chain(self.llm, prompt)
-            #chain = create_retrieval_chain(vectorstoreChroma.as_retriever(search_type="mmr"), question_answer_chain)
-            # docs = [
-            #     Document(page_content="Jesse loves red but not yellow"),
-            #     Document(page_content = "Jamal loves green but not as much as he loves orange")
-            # ]
-
-          #  chain.invoke({"context": docs})
-            # chain.invoke({"input": question, "verbose": True})
-
-
-
 if __name__ == "__main__":
     model = Model()
     model.create_model()
-    
-    #  llm = Llama(
-    # model_path="./mistral-7b-instruct-v0.2.Q4_K_M.gguf",  # Download the model file first
-    # n_ctx=32768,  # The max sequence length to use - note that longer sequence lengths require much more resources
-    # n_threads=8,            # The number of CPU threads to use, tailor to your system and the resulting performance
-    # n_gpu_layers=35         # The number of layers to offload to GPU, if you have GPU acceleration available
-    # )
-        # model = AutoModel.from_pretrained("TheBloke/Mistral-7b-Instruct-v0.2-GGUF",from_tf=True)
-        # output_generator = model(
-        #     " TALK TO ME ", # Prompt
-        #     stop=["ASSISTANT"],
-        # stream=True  , # Example stop token - not necessarily correct for this specific model! Please check before using.
-        #     )
-     
-        # model = MistralForCausalLM.from_pretrained("mistralai/Mistral-7B-v0.3",from_tf=True)
-
-        # tokenizer = AutoTokenizer.from_pretrained("mistralai/Mistral-7B-v0.3")
-
-        # prompt = "Hey, are you conscious? Can you talk to me?"
-
-        # inputs = tokenizer(prompt, return_tensors="pt")
-
-        # Generate
-
-        # generate_ids = model.generate(inputs.input_ids, max_length=30)
-
-        # tokenizer.batch_decode(generate_ids, skip_special_tokens=True, clean_up_tokenization_spaces=False)[0]
